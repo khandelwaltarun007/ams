@@ -37,8 +37,8 @@ public class Attendance {
     @Column(name = "date")
     private LocalDate date;
 
-    @Column(name = "type")
-    private String type;
+    @Enumerated(EnumType.STRING)
+    private Type type;
     
     @Enumerated(EnumType.STRING)
     private ApprovalStatus status;

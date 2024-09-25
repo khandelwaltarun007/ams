@@ -1,11 +1,14 @@
 package com.javalabs.resource;
 
 import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.Collections;
 
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -45,29 +48,37 @@ public class AttendanceController {
     }
 
     @GetMapping("/attendance/user/{userId}")
-    public ResponseEntity<List<GetAttendanceResponse>> getAttendanceByEmployee(@PathVariable Long userId) {
+    public ResponseEntity<Page<GetAttendanceResponse>> getAttendanceByEmployee(@PathVariable Long userId,
+    		@RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
         User user = userService.findUserByUserId(userId);
-        List<Attendance> attendances = attendanceService.getAttendanceByUser(user);
-        List<GetAttendanceResponse> attendancesResponse = new ArrayList<>();
+        Pageable pageable = PageRequest.of(page, size);
+        Page<Attendance> attendances = attendanceService.getAttendanceByUser(user, pageable);
+        Page<GetAttendanceResponse> attendancesResponse = new PageImpl<>(Collections.emptyList(), pageable, 0);
 		BeanUtils.copyProperties(attendances, attendancesResponse);
 		attendancesResponse = AttendanceMapper.INSTANCE.mapToGetResponseList(attendances);
         return new ResponseEntity<>(attendancesResponse, HttpStatus.OK);
     }
 
     @GetMapping("/attendance/date/{date}")
-    public ResponseEntity<List<GetAttendanceResponse>> getAttendanceByDate(@PathVariable String date) {
+    public ResponseEntity<Page<GetAttendanceResponse>> getAttendanceByDate(@PathVariable String date,
+    		@RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
         LocalDate parsedDate = LocalDate.parse(date);
-        List<Attendance> attendances = attendanceService.getAttendanceByDate(parsedDate);
-        List<GetAttendanceResponse> attendancesResponse = new ArrayList<>();
+        Pageable pageable = PageRequest.of(page, size);
+        Page<Attendance> attendances = attendanceService.getAttendanceByDate(parsedDate, pageable);
+        Page<GetAttendanceResponse> attendancesResponse = new PageImpl<>(Collections.emptyList(), pageable, 0);
 		BeanUtils.copyProperties(attendances, attendancesResponse);
 		attendancesResponse = AttendanceMapper.INSTANCE.mapToGetResponseList(attendances);
         return new ResponseEntity<>(attendancesResponse, HttpStatus.OK);
     }
 
     @GetMapping("/attendance")
-    public ResponseEntity<List<GetAttendanceResponse>> getAllAttendance() {
-        List<Attendance> attendances = attendanceService.getAllAttendance();
-        List<GetAttendanceResponse> attendancesResponse = new ArrayList<>();
+    public ResponseEntity<Page<GetAttendanceResponse>> getAllAttendance(@RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+    	Pageable pageable = PageRequest.of(page, size);
+        Page<Attendance> attendances = attendanceService.getAllAttendance(pageable);
+        Page<GetAttendanceResponse> attendancesResponse = new PageImpl<>(Collections.emptyList(), pageable, 0);
 		BeanUtils.copyProperties(attendances, attendancesResponse);
 		attendancesResponse = AttendanceMapper.INSTANCE.mapToGetResponseList(attendances);
         return new ResponseEntity<>(attendancesResponse, HttpStatus.OK);
@@ -84,15 +95,18 @@ public class AttendanceController {
     }
     
     @GetMapping("/attendance/filter")
-    public ResponseEntity<List<GetAttendanceResponse>> getAttendanceByStatus(@RequestParam ApprovalStatus status,
+    public ResponseEntity<Page<GetAttendanceResponse>> getAttendanceByStatus(@RequestParam ApprovalStatus status,
             @RequestParam(required = false) Long userId,
             @RequestParam(required = false) String username,
-            @RequestParam(required = false) String comments){
+            @RequestParam(required = false) String comments,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size){
     	if(null==status) {
     		throw new MissingMandatoryFieldException("status is not valid or missing.");
     	}
-    	List<Attendance> attendances = attendanceService.getAttendanceByStatus(status, username, userId);
-    	List<GetAttendanceResponse> attendancesResponse = new ArrayList<>();
+    	Pageable pageable = PageRequest.of(page, size);
+    	Page<Attendance> attendances = attendanceService.getAttendanceByStatus(status, username, userId, pageable);
+    	Page<GetAttendanceResponse> attendancesResponse = new PageImpl<>(Collections.emptyList(), pageable, 0);
 		BeanUtils.copyProperties(attendances, attendancesResponse);
 		attendancesResponse = AttendanceMapper.INSTANCE.mapToGetResponseList(attendances);
     	return ResponseEntity.ok(attendancesResponse);

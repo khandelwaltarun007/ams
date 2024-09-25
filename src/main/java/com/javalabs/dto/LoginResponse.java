@@ -1,5 +1,7 @@
 package com.javalabs.dto;
 
+import java.util.Date;
+
 import lombok.AllArgsConstructor;
 import lombok.Data;
 
@@ -7,6 +9,6 @@ import lombok.Data;
 @AllArgsConstructor
 public class LoginResponse {
 
-	private String response;
-	//private GetUserResponse user;
+	private String token;
+	private Date expirationDate;
 }

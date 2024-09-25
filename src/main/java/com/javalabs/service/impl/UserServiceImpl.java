@@ -1,5 +1,6 @@
 package com.javalabs.service.impl;
 
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
@@ -8,6 +9,7 @@ import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.event.EventListener;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import com.javalabs.dto.CreateUserRequest;
@@ -15,13 +17,16 @@ import com.javalabs.dto.CreateUserResponse;
 import com.javalabs.dto.GetUserResponse;
 import com.javalabs.exception.common.EntityNotFoundException;
 import com.javalabs.mapper.UserMapper;
-import com.javalabs.model.DayOfWeek;
+import com.javalabs.model.ApprovalStatus;
+import com.javalabs.model.Attendance;
 import com.javalabs.model.PasswordHistory;
 import com.javalabs.model.Project;
 import com.javalabs.model.Role;
+import com.javalabs.model.Type;
 import com.javalabs.model.User;
-import com.javalabs.model.WfoDay;
+import com.javalabs.repository.IAttendanceRepository;
 import com.javalabs.repository.IPasswordHistoryRepository;
+import com.javalabs.repository.IPermissionRepository;
 import com.javalabs.repository.IProjectRepository;
 import com.javalabs.repository.IRoleRepository;
 import com.javalabs.repository.IUserRepository;
@@ -45,20 +50,57 @@ public class UserServiceImpl implements IUserService {
 	@Autowired
 	private IProjectRepository projectRepository;
 	
+	//@Autowired
+	private IPermissionRepository permissionRepository;
+	
+	@Autowired
+	private IAttendanceRepository attendanceRepository;
+	
 	@EventListener(ApplicationReadyEvent.class)
 	public void postContructMethod() {
 		User user = new User();
-		user.setFirstName("admin");
-		user.setLastName("admin");
+		user.setFirstName("Administrator");
+		user.setLastName("");
 		user.setEmail("admin@admin.com");
 		user.setStatus(true);
-		user.setPassword(CodeUtility.encodePassword("admin"));
+		user.setPassword(new BCryptPasswordEncoder(12).encode("admin"));
 		user.setUsername("admin");
 		Role role = new Role();
 		role.setName("ADMIN");
+		role.setPermissions(List.of("READ_ONLY", "CREATE", "UPDATE", "DELETE"));
 		Role createdRole = roleRepository.save(role);
 		user.setRole(createdRole);
-		userRepository.save(user);
+		user = userRepository.save(user);
+		
+		for (int i = 10; i >= 1; i--) {
+			Attendance attendance = Attendance.builder().user(user).date(LocalDate.now().minusDays(i)).type(Type.WFO)
+					.status(ApprovalStatus.APPROVED).build();
+			attendanceRepository.save(attendance);
+		}
+		
+		
+		User user1 = new User();
+		user1.setFirstName("Tarun");
+		user1.setLastName("Khandelwal");
+		user1.setEmail("admin@admin.com");
+		user1.setStatus(true);
+		user1.setPassword(new BCryptPasswordEncoder(12).encode("tarun"));
+		user1.setUsername("tarun");
+		Role role1 = new Role();
+		role1.setName("ADMIN");
+		role1.setPermissions(List.of("READ_ONLY", "CREATE", "UPDATE", "DELETE"));
+		Role createdRole1 = roleRepository.save(role1);
+		user1.setRole(createdRole1);
+		user1 = userRepository.save(user1);
+		
+		for (int i = 10; i >= 1; i--) {
+			Attendance attendance = Attendance.builder().user(user1).date(LocalDate.now().minusDays(i)).type(Type.WFO)
+					.status(ApprovalStatus.APPROVED).build();
+			attendanceRepository.save(attendance);
+		}
+		
+		
+		
 	}
 
 	@Transactional

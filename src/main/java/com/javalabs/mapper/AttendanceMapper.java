@@ -5,6 +5,9 @@ import java.util.List;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.factory.Mappers;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
 
 import com.javalabs.dto.AttendanceCalculationResponse;
 import com.javalabs.dto.CreateAttendanceResponse;
@@ -34,9 +37,16 @@ public interface AttendanceMapper {
     
     
     @Mapping(source = "user.id",target = "userId")
+    @Mapping(target = "fullname", expression = "java(attendance.getUser().getFirstName() + \" \" + attendance.getUser().getLastName())")
     GetAttendanceResponse mapToGetResponse(Attendance attendance);
     
-    List<GetAttendanceResponse> mapToGetResponseList(List<Attendance> attendances);
+    //List<GetAttendanceResponse> mapToGetResponseList(List<Attendance> attendances);
+    default Page<GetAttendanceResponse> mapToGetResponseList(Page<Attendance> attendances) {
+        List<GetAttendanceResponse> responseList = attendances.getContent().stream()
+                .map(this::mapToGetResponse)
+                .toList();
+        return new PageImpl<>(responseList, Pageable.ofSize(attendances.getSize()), attendances.getTotalElements());
+    }
     
     @Mapping(source = "user.id", target = "userId")
     AttendanceCalculationResponse mapToResponse(AttendanceCalculation attendanceCalculation);

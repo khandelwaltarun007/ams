@@ -1,38 +1,46 @@
 package com.javalabs.service.impl;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
+import com.javalabs.config.jwt.CustomUserDetailsService;
+import com.javalabs.config.jwt.JwtUtil;
 import com.javalabs.dto.LoginRequest;
+import com.javalabs.dto.LoginResponse;
 import com.javalabs.exception.common.AuthenticationException;
-import com.javalabs.exception.common.EntityNotFoundException;
-import com.javalabs.model.User;
-import com.javalabs.repository.IUserRepository;
 import com.javalabs.service.ILoginService;
-import com.javalabs.util.CodeUtility;
 
 @Service
 public class LoginServiceImpl implements ILoginService {
 
 	@Autowired
-	private IUserRepository userRepository;
+	private AuthenticationManager authenticationManager;
+	
+	@Autowired
+	private CustomUserDetailsService userDetailService;
+
+	@Autowired
+	private JwtUtil jwtUtil;
 
 	@Override
-	public boolean authenticate(LoginRequest loginRequest) {
-		User user = userRepository.findByUsername(loginRequest.getUsername())
-				.orElseThrow(() -> new EntityNotFoundException("User does not exist."));
-		if(!user.isStatus()) {
-			throw new AuthenticationException("User is inactive.");
+	public LoginResponse authenticate(LoginRequest loginRequest) {
+		String username = loginRequest.getUsername();
+		String password = loginRequest.getPassword();
+		try {
+			authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(username, password));
+		} catch (BadCredentialsException e) {
+			throw new AuthenticationException("Invalid username or password.");
+		} catch (Exception e) {
+			e.printStackTrace();
 		}
-		if(user.isTemporaryPassword()) {
-			throw new AuthenticationException("Please set the permanent password.");
-		}
-		String encodedPassword = new String(CodeUtility.encodePassword(loginRequest.getPassword()));
-		if (!(user.getPassword()
-				.equals(encodedPassword))) {
-			throw new AuthenticationException("Username/Password is incorrect.");
-		}
-		return true;
+		final UserDetails userDetails = userDetailService.loadUserByUsername(username);
+		final String token = jwtUtil.generateToken(userDetails);
+		//System.out.println(userCustomRepository.getUserByUsername(jwtUtil.extractUserName(token)));
+		return new LoginResponse(token, jwtUtil.getTokenExpirationDate(token));
 	}
 
 }

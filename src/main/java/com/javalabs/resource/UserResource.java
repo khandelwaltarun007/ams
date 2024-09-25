@@ -5,6 +5,9 @@ import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -16,6 +19,7 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.javalabs.bulk.ImportBulkUsers;
+import com.javalabs.config.jwt.JwtUtil;
 import com.javalabs.dto.CreateUserRequest;
 import com.javalabs.dto.CreateUserResponse;
 import com.javalabs.dto.GetUserResponse;
@@ -31,6 +35,9 @@ public class UserResource {
 	
 	@Autowired
 	private IBulkService bulkService;
+	
+	@Autowired
+	private JwtUtil jwtUtil;
 	
 	@PostMapping("/user")
 	public ResponseEntity<CreateUserResponse> createUser(@RequestBody CreateUserRequest userCreateRequest){
@@ -53,6 +60,13 @@ public class UserResource {
 	
 	@GetMapping("/user/{username}")
 	public ResponseEntity<GetUserResponse> getUserByUsername(@PathVariable("username") String username){
+		return ResponseEntity.ok(userService.findByUsername(username));
+	}
+		
+	@GetMapping("/user/details")
+	public ResponseEntity<GetUserResponse> getUserDetailsByToken(){
+		Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+		String username = ((UserDetails)auth.getPrincipal()).getUsername();
 		return ResponseEntity.ok(userService.findByUsername(username));
 	}
 	

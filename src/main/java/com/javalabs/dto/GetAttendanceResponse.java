@@ -13,4 +13,5 @@ public class GetAttendanceResponse {
     private String status;
     private String managerUsername;
     private String comments;
+    private String fullname;
 }
