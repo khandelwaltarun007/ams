@@ -2,6 +2,7 @@ package com.javalabs.service.impl;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Optional;
 
 import org.apache.logging.log4j.util.Strings;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -15,11 +16,12 @@ import com.javalabs.exception.common.EntityNotFoundException;
 import com.javalabs.exception.common.MissingMandatoryFieldException;
 import com.javalabs.model.ApprovalStatus;
 import com.javalabs.model.Attendance;
-import com.javalabs.model.Type;
 import com.javalabs.model.User;
 import com.javalabs.repository.IAttendanceRepository;
 import com.javalabs.service.IAttendanceService;
 import com.javalabs.service.IUserService;
+
+import jakarta.persistence.EntityExistsException;
 
 @Service
 public class AttendanceServiceImpl implements IAttendanceService {
@@ -33,12 +35,16 @@ public class AttendanceServiceImpl implements IAttendanceService {
 	@Override
 	public Attendance markAttendance(CreateAttendanceRequest attendanceRequest) {
 		User user = userService.findUserByUserId(attendanceRequest.getUserId());
+		System.out.println(user.getUsername());
 		Attendance attendance = Attendance.builder()
 				.user(user)
 				.date(attendanceRequest.getDate())
-				.type(Type.valueOf(attendanceRequest.getType()))
+				.type(attendanceRequest.getType())
 				.status(ApprovalStatus.PENDING_FOR_APPROVAL)
 				.managerUsername(user.getManager().getUsername()).build();
+		attendanceRepository.findByUserAndDate(user, attendanceRequest.getDate()).ifPresent((attendace) -> {
+			throw new EntityExistsException("Attendance is already logged for : " + attendanceRequest.getDate());
+		});
 		return attendanceRepository.save(attendance);	
 	}
 

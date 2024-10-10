@@ -21,6 +21,7 @@ public interface IAttendanceRepository extends JpaRepository<Attendance, Long> {
     Page<Attendance> findByUserAndStatus(User user, ApprovalStatus status, Pageable pageable);
 	Page<Attendance> findByManagerUsernameAndStatus(String username, ApprovalStatus status, Pageable pageable);
 	Optional<Attendance> findByUserAndDate(User user, LocalDate date);
+	Optional<Attendance> findByUserAndDateAndStatus(User user, LocalDate date, ApprovalStatus status);
 	
 	@Query("SELECT a FROM Attendance a JOIN FETCH a.user")
     List<Attendance> findAllWithUserEagerly();

@@ -45,7 +45,8 @@ public class AttendanceCalculationServiceImpl implements IAttendanceCalculationS
 	@Autowired
 	private IUserService userService;
 	private List<String> absentDayCodes = List.of("SL","PL","CL");
-	private List<String> presentDayCodes = List.of("WFO");
+	private List<String> wfoDayCodes = List.of("WFO");
+	private List<String> presentDaysCode = List.of("WFH");
 
 	@Autowired
 	private IAttendanceRepository attendanceRepository;
@@ -56,12 +57,18 @@ public class AttendanceCalculationServiceImpl implements IAttendanceCalculationS
 	@Override
     public AttendanceCalculationResponse calculateAttendance(Long userId) {
 		User user = userService.findUserByUserId(userId);
+		try {
 		List<Attendance> attendances = getListOfAttendancesByUser(user);
 		AttendanceCalculation attendanceCalculation = calcAttendance(user, attendances);
 		AttendanceCalculationResponse attendanceCalculationResponse = new AttendanceCalculationResponse();
 		BeanUtils.copyProperties(attendanceCalculation, attendanceCalculationResponse);
 		attendanceCalculationResponse = AttendanceMapper.INSTANCE.mapToResponse(attendanceCalculation);
+		
         return attendanceCalculationResponse;
+		}catch(Exception e) {
+			e.printStackTrace();
+			return null;
+		}
     }
 	
 	private List<Attendance> getListOfAttendancesByUser(User user){
@@ -99,9 +106,10 @@ public class AttendanceCalculationServiceImpl implements IAttendanceCalculationS
 	 * @return AttendanceCalculation
 	 */
 	private AttendanceCalculation calcAttendance(User user, List<Attendance> attendances) {
-		Double presentDays = getDaysUsingCodes(attendances, presentDayCodes);
+		Double wfoDays = getDaysUsingCodes(attendances, wfoDayCodes);
+		Double presentDays = getDaysUsingCodes(attendances, presentDaysCode);
 		Double absentDays = getDaysUsingCodes(attendances, absentDayCodes);
-		double yearPercentage = getYearPercentage(user, attendances, presentDays);
+		double yearPercentage = getYearPercentage(user, attendances, wfoDays);
 		AttendanceCalculation attendanceCalculation = attendanceCalculationRepository.findByUser(user);
 		if(null == attendanceCalculation) {
 			attendanceCalculation = new AttendanceCalculation();
@@ -109,7 +117,8 @@ public class AttendanceCalculationServiceImpl implements IAttendanceCalculationS
 		}
 		attendanceCalculation.setAbsenseDays(absentDays);
 		attendanceCalculation.setPercentage(yearPercentage);
-		attendanceCalculation.setWfoDays(presentDays);
+		attendanceCalculation.setPresentDays(presentDays);
+		attendanceCalculation.setWfoDays(wfoDays);
 		attendanceCalculation.setUpdateDate(LocalDate.now());
 		attendanceCalculation = attendanceCalculationRepository.save(attendanceCalculation);
 		return attendanceCalculation;

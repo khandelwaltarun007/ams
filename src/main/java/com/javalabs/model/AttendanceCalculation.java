@@ -25,6 +25,7 @@ public class AttendanceCalculation {
 	private User user;
 	private Double percentage;
 	private Double absenseDays;
+	private Double presentDays;
 	private Double wfoDays;
 	private LocalDate updateDate;
 }

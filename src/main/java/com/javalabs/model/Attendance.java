@@ -2,6 +2,8 @@ package com.javalabs.model;
 
 import java.time.LocalDate;
 
+import org.springframework.data.jpa.repository.config.EnableJpaAuditing;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -24,7 +26,8 @@ import lombok.RequiredArgsConstructor;
 @AllArgsConstructor
 @RequiredArgsConstructor
 @Builder
-public class Attendance {
+@EnableJpaAuditing
+public class Attendance implements BaseEntity {
 
 	@Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -37,8 +40,7 @@ public class Attendance {
     @Column(name = "date")
     private LocalDate date;
 
-    @Enumerated(EnumType.STRING)
-    private Type type;
+    private String type;
     
     @Enumerated(EnumType.STRING)
     private ApprovalStatus status;

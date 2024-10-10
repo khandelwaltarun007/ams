@@ -22,7 +22,6 @@ import com.javalabs.model.Attendance;
 import com.javalabs.model.PasswordHistory;
 import com.javalabs.model.Project;
 import com.javalabs.model.Role;
-import com.javalabs.model.Type;
 import com.javalabs.model.User;
 import com.javalabs.repository.IAttendanceRepository;
 import com.javalabs.repository.IPasswordHistoryRepository;
@@ -73,7 +72,7 @@ public class UserServiceImpl implements IUserService {
 		user = userRepository.save(user);
 		
 		for (int i = 10; i >= 1; i--) {
-			Attendance attendance = Attendance.builder().user(user).date(LocalDate.now().minusDays(i)).type(Type.WFO)
+			Attendance attendance = Attendance.builder().user(user).date(LocalDate.now().minusDays(i)).type("WFO")
 					.status(ApprovalStatus.APPROVED).build();
 			attendanceRepository.save(attendance);
 		}
@@ -86,15 +85,28 @@ public class UserServiceImpl implements IUserService {
 		user1.setStatus(true);
 		user1.setPassword(new BCryptPasswordEncoder(12).encode("tarun"));
 		user1.setUsername("tarun");
-		Role role1 = new Role();
-		role1.setName("ADMIN");
-		role1.setPermissions(List.of("READ_ONLY", "CREATE", "UPDATE", "DELETE"));
-		Role createdRole1 = roleRepository.save(role1);
-		user1.setRole(createdRole1);
+		user1.setRole(createdRole);
+		user1.setDateOfJoining(LocalDate.now().minusMonths(8L));
+		user1.setManager(user);
 		user1 = userRepository.save(user1);
 		
-		for (int i = 10; i >= 1; i--) {
-			Attendance attendance = Attendance.builder().user(user1).date(LocalDate.now().minusDays(i)).type(Type.WFO)
+		for (int i = 5; i >= 1; i--) {
+			Attendance attendance = Attendance.builder().user(user1).date(LocalDate.now().minusDays(i*10)).type("WFO")
+					.status(ApprovalStatus.APPROVED).build();
+			attendanceRepository.save(attendance);
+		}
+		for (int i = 5; i >= 1; i--) {
+			Attendance attendance = Attendance.builder().user(user1).date(LocalDate.now().minusDays(i*10)).type("WFH")
+					.status(ApprovalStatus.APPROVED).build();
+			attendanceRepository.save(attendance);
+		}
+		for (int i = 3; i >= 1; i--) {
+			Attendance attendance = Attendance.builder().user(user1).date(LocalDate.now().minusDays(i*10)).type("SL")
+					.status(ApprovalStatus.APPROVED).build();
+			attendanceRepository.save(attendance);
+		}
+		for (int i = 3; i >= 1; i--) {
+			Attendance attendance = Attendance.builder().user(user1).date(LocalDate.now().minusDays(i*10)).type("CL")
 					.status(ApprovalStatus.APPROVED).build();
 			attendanceRepository.save(attendance);
 		}
